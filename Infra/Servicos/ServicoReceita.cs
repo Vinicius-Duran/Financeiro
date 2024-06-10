@@ -1,60 +1,48 @@
-﻿using Dominio.Argumentos;
+﻿using AutoMapper;
+using Dominio.Argumentos;
 using Dominio.Entidades;
 using Dominio.Interfaces;
 using Dominio.Interfaces.Repositorio;
+using System.Collections.Generic;
 
 namespace Infra.Servicos
 {
     public class ServicoReceita : IServicoReceita
     {
         private readonly IRepositorioReceita _repositorioReceita;
+        private readonly IMapper _mapper;
 
-        public ServicoReceita(IRepositorioReceita repositorioReceita)
+        public ServicoReceita(IRepositorioReceita repositorioReceita, IMapper mapper)
         {
             _repositorioReceita = repositorioReceita;
+            _mapper = mapper;
         }
 
         public DTOReceita Adicionar(DTOReceita dtoReceita)
         {
-            var receita = new Receita
-            {
-                Nome = dtoReceita.Nome,
-                Cpf = dtoReceita.Cpf,
-                Email = dtoReceita.Email,
-                Celular = dtoReceita.Celular
-            };
-
+            var receita = _mapper.Map<Receita>(dtoReceita);
             _repositorioReceita.Adicionar(receita);
-            dtoReceita.Id = receita.Id;
-            return dtoReceita;
+            return _mapper.Map<DTOReceita>(receita);
         }
 
         public DTOReceita Editar(DTOReceita dtoReceita)
         {
             var receita = _repositorioReceita.ObterPorId(dtoReceita.Id);
-            if (receita != null)
+            if (receita == null)
             {
-                receita.Nome = dtoReceita.Nome;
-                receita.Cpf = dtoReceita.Cpf;
-                receita.Email = dtoReceita.Email;
-                receita.Celular = dtoReceita.Celular;
-
-                _repositorioReceita.Editar(receita);
+                throw new KeyNotFoundException("Receita não encontrada.");
             }
+
+            _mapper.Map(dtoReceita, receita);
+            _repositorioReceita.Editar(receita);
 
             return dtoReceita;
         }
 
         public IEnumerable<DTOReceita> Listar()
         {
-            return _repositorioReceita.Listar().Select(r => new DTOReceita
-            {
-                Id = r.Id,
-                Nome = r.Nome,
-                Cpf = r.Cpf,
-                Email = r.Email,
-                Celular = r.Celular
-            }).ToList();
+            var receitas = _repositorioReceita.Listar();
+            return _mapper.Map<IEnumerable<DTOReceita>>(receitas);
         }
 
         public DTOReceita ObterPorId(int id)
@@ -62,17 +50,10 @@ namespace Infra.Servicos
             var receita = _repositorioReceita.ObterPorId(id);
             if (receita == null)
             {
-                throw new Exception("Receita não encontrada.");
+                throw new KeyNotFoundException("Receita não encontrada.");
             }
 
-            return new DTOReceita
-            {
-                Id = receita.Id,
-                Nome = receita.Nome,
-                Cpf = receita.Cpf,
-                Email = receita.Email,
-                Celular = receita.Celular
-            };
+            return _mapper.Map<DTOReceita>(receita);
         }
 
         public void Remover(int id)
@@ -80,7 +61,7 @@ namespace Infra.Servicos
             var receita = _repositorioReceita.ObterPorId(id);
             if (receita == null)
             {
-                throw new Exception("Receita não encontrada.");
+                throw new KeyNotFoundException("Receita não encontrada.");
             }
 
             _repositorioReceita.Remover(id);

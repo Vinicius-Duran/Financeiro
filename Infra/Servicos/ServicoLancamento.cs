@@ -1,39 +1,30 @@
-﻿using Dominio.Argumentos;
+﻿using AutoMapper;
+using Dominio.Argumentos;
 using Dominio.Entidades;
 using Dominio.Interfaces;
+using Dominio.Interfaces.Repositorio;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using Dominio.Interfaces.Repositorio;
 
 namespace Infra.Servicos
 {
     public class ServicoLancamento : IServicoLancamento
     {
         private readonly IRepositorioLancamento _repositorioLancamento;
+        private readonly IMapper _mapper;
 
-        public ServicoLancamento(IRepositorioLancamento repositorioLancamento)
+        public ServicoLancamento(IRepositorioLancamento repositorioLancamento, IMapper mapper)
         {
             _repositorioLancamento = repositorioLancamento;
+            _mapper = mapper;
         }
 
         public DTOLancamento Adicionar(DTOLancamento dtoLancamento)
         {
-            var lancamento = new Lancamento
-            {
-                Descricao = dtoLancamento.Descricao,
-                Tipo = (Dominio.Entidades.LancamentoTipo)dtoLancamento.Tipo,
-                Valor = dtoLancamento.Valor,
-                DataVencimento = dtoLancamento.DataVencimento,
-                ReceitaId = dtoLancamento.ReceitaId,
-                CentroCustoId = dtoLancamento.CentroCustoId,
-                ContaBancariaId = dtoLancamento.ContaBancariaId
-            };
-
+            var lancamento = _mapper.Map<Lancamento>(dtoLancamento);
             _repositorioLancamento.Adicionar(lancamento);
-            dtoLancamento.Id = lancamento.Id;
-            return dtoLancamento;
+            return _mapper.Map<DTOLancamento>(lancamento);
         }
 
         public DTOLancamento Editar(DTOLancamento dtoLancamento)
@@ -44,14 +35,7 @@ namespace Infra.Servicos
                 throw new InvalidOperationException("Lançamento não encontrado.");
             }
 
-            lancamento.Descricao = dtoLancamento.Descricao;
-            lancamento.Tipo = (Dominio.Entidades.LancamentoTipo)dtoLancamento.Tipo;
-            lancamento.Valor = dtoLancamento.Valor;
-            lancamento.DataVencimento = dtoLancamento.DataVencimento;
-            lancamento.ReceitaId = dtoLancamento.ReceitaId;
-            lancamento.CentroCustoId = dtoLancamento.CentroCustoId;
-            lancamento.ContaBancariaId = dtoLancamento.ContaBancariaId;
-
+            _mapper.Map(dtoLancamento, lancamento);
             _repositorioLancamento.Editar(lancamento);
 
             return dtoLancamento;
@@ -59,47 +43,8 @@ namespace Infra.Servicos
 
         public IEnumerable<DTOLancamento> Listar()
         {
-#pragma warning disable CS8601 // Possível atribuição de referência nula.
-            return _repositorioLancamento.Listar()
-                .Include(l => l.CentroCusto)
-                .Include(l => l.Receita)
-                .Include(l => l.ContaBancaria)
-                .Select(l => new DTOLancamento
-                {
-                    Id = l.Id,
-                    Descricao = l.Descricao,
-                    Tipo = (Dominio.Argumentos.LancamentoTipo)l.Tipo,
-                    Valor = l.Valor,
-                    DataVencimento = l.DataVencimento,
-                    ReceitaId = l.ReceitaId,
-                    CentroCustoId = l.CentroCustoId,
-                    ContaBancariaId = l.ContaBancariaId,
-                    CentroCusto = l.CentroCusto == null ? null : new DTOCentroCusto
-                    {
-                        Id = l.CentroCusto.Id,
-                        Nome = l.CentroCusto.Nome,
-                        Cpf = l.CentroCusto.Cpf,
-                        Email = l.CentroCusto.Email,
-                        Celular = l.CentroCusto.Celular
-                    },
-                    Receita = l.Receita == null ? null : new DTOReceita
-                    {
-                        Id = l.Receita.Id,
-                        Nome = l.Receita.Nome,
-                        Cpf = l.Receita.Cpf,
-                        Email = l.Receita.Email,
-                        Celular = l.Receita.Celular
-                    },
-                    ContaBancaria = l.ContaBancaria == null ? null : new DTOContaBancaria
-                    {
-                        Id = l.ContaBancaria.Id,
-                        Nome = l.ContaBancaria.Nome,
-                        Agencia = l.ContaBancaria.Agencia,
-                        Conta = l.ContaBancaria.Conta
-                    }
-                })
-                .ToList();
-#pragma warning restore CS8601 // Possível atribuição de referência nula.
+            var lancamentos = _repositorioLancamento.Listar();
+            return _mapper.Map<IEnumerable<DTOLancamento>>(lancamentos);
         }
 
         public DTOLancamento ObterPorId(int id)
@@ -110,17 +55,7 @@ namespace Infra.Servicos
                 throw new InvalidOperationException("Lançamento não encontrado.");
             }
 
-            return new DTOLancamento
-            {
-                Id = lancamento.Id,
-                Descricao = lancamento.Descricao,
-                Tipo = (Dominio.Argumentos.LancamentoTipo)lancamento.Tipo,
-                Valor = lancamento.Valor,
-                DataVencimento = lancamento.DataVencimento,
-                ReceitaId = lancamento.ReceitaId,
-                CentroCustoId = lancamento.CentroCustoId,
-                ContaBancariaId = lancamento.ContaBancariaId
-            };
+            return _mapper.Map<DTOLancamento>(lancamento);
         }
 
         public void Remover(int id)

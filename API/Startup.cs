@@ -35,6 +35,8 @@ namespace API
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "API Financeiro", Version = "v1" });
             });
 
+            services.AddAutoMapper(typeof(MappingProfile));
+
             services.AddScoped<IRepositorioCentroCusto, RepositorioCentroCusto>();
             services.AddScoped<IRepositorioContaBancaria, RepositorioContaBancaria>();
             services.AddScoped<IRepositorioLancamento, RepositorioLancamento>();

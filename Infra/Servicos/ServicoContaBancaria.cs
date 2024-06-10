@@ -1,4 +1,5 @@
-﻿using Dominio.Argumentos;
+﻿using AutoMapper;
+using Dominio.Argumentos;
 using Dominio.Entidades;
 using Dominio.Interfaces;
 using Dominio.Interfaces.Repositorio;
@@ -10,50 +11,39 @@ namespace Infra.Servicos
     public class ServicoContaBancaria : IServicoContaBancaria
     {
         private readonly IRepositorioContaBancaria _repositorioContaBancaria;
+        private readonly IMapper _mapper;
 
-        public ServicoContaBancaria(IRepositorioContaBancaria repositorioContaBancaria)
+        public ServicoContaBancaria(IRepositorioContaBancaria repositorioContaBancaria, IMapper mapper)
         {
             _repositorioContaBancaria = repositorioContaBancaria;
+            _mapper = mapper;
         }
 
         public DTOContaBancaria Adicionar(DTOContaBancaria dtoContaBancaria)
         {
-            var contaBancaria = new ContaBancaria
-            {
-                Nome = dtoContaBancaria.Nome,
-                Agencia = dtoContaBancaria.Agencia,
-                Conta = dtoContaBancaria.Conta
-            };
-
+            var contaBancaria = _mapper.Map<ContaBancaria>(dtoContaBancaria);
             _repositorioContaBancaria.Adicionar(contaBancaria);
-            dtoContaBancaria.Id = contaBancaria.Id;
-            return dtoContaBancaria;
+            return _mapper.Map<DTOContaBancaria>(contaBancaria);
         }
 
         public DTOContaBancaria Editar(DTOContaBancaria dtoContaBancaria)
         {
             var contaBancaria = _repositorioContaBancaria.ObterPorId(dtoContaBancaria.Id);
-            if (contaBancaria != null)
+            if (contaBancaria == null)
             {
-                contaBancaria.Nome = dtoContaBancaria.Nome;
-                contaBancaria.Agencia = dtoContaBancaria.Agencia;
-                contaBancaria.Conta = dtoContaBancaria.Conta;
-
-                _repositorioContaBancaria.Editar(contaBancaria);
+                throw new KeyNotFoundException("Conta bancária não encontrada.");
             }
+
+            _mapper.Map(dtoContaBancaria, contaBancaria);
+            _repositorioContaBancaria.Editar(contaBancaria);
 
             return dtoContaBancaria;
         }
 
         public IEnumerable<DTOContaBancaria> Listar()
         {
-            return _repositorioContaBancaria.Listar().Select(p => new DTOContaBancaria
-            {
-                Id = p.Id,
-                Nome = p.Nome,
-                Agencia = p.Agencia,
-                Conta = p.Conta
-            }).ToList();
+            var contasBancarias = _repositorioContaBancaria.Listar();
+            return _mapper.Map<IEnumerable<DTOContaBancaria>>(contasBancarias);
         }
 
         public DTOContaBancaria ObterPorId(int id)
@@ -61,20 +51,20 @@ namespace Infra.Servicos
             var contaBancaria = _repositorioContaBancaria.ObterPorId(id);
             if (contaBancaria == null)
             {
-                throw new Exception("Conta Bancária não encontrada.");
+                throw new KeyNotFoundException("Conta bancária não encontrada.");
             }
 
-            return new DTOContaBancaria
-            {
-                Id = contaBancaria.Id,
-                Nome = contaBancaria.Nome,
-                Agencia = contaBancaria.Agencia,
-                Conta = contaBancaria.Conta
-            };
+            return _mapper.Map<DTOContaBancaria>(contaBancaria);
         }
 
         public void Remover(int id)
         {
+            var contaBancaria = _repositorioContaBancaria.ObterPorId(id);
+            if (contaBancaria == null)
+            {
+                throw new KeyNotFoundException("Conta bancária não encontrada.");
+            }
+
             _repositorioContaBancaria.Remover(id);
         }
     }

@@ -1,4 +1,5 @@
-﻿using Dominio.Argumentos;
+﻿using AutoMapper;
+using Dominio.Argumentos;
 using Dominio.Entidades;
 using Dominio.Interfaces;
 using Dominio.Interfaces.Repositorio;
@@ -10,53 +11,39 @@ namespace Infra.Servicos
     public class ServicoCentroCusto : IServicoCentroCusto
     {
         private readonly IRepositorioCentroCusto _repositorioCentroCusto;
+        private readonly IMapper _mapper;
 
-        public ServicoCentroCusto(IRepositorioCentroCusto repositorioCentroCusto)
+        public ServicoCentroCusto(IRepositorioCentroCusto repositorioCentroCusto, IMapper mapper)
         {
             _repositorioCentroCusto = repositorioCentroCusto;
+            _mapper = mapper;
         }
 
         public DTOCentroCusto Adicionar(DTOCentroCusto dtoCentroCusto)
         {
-            var centroCusto = new CentroCusto
-            {
-                Nome = dtoCentroCusto.Nome,
-                Cpf = dtoCentroCusto.Cpf,
-                Email = dtoCentroCusto.Email,
-                Celular = dtoCentroCusto.Celular
-            };
-
+            var centroCusto = _mapper.Map<CentroCusto>(dtoCentroCusto);
             _repositorioCentroCusto.Adicionar(centroCusto);
-            dtoCentroCusto.Id = centroCusto.Id;
-            return dtoCentroCusto;
+            return _mapper.Map<DTOCentroCusto>(centroCusto);
         }
 
         public DTOCentroCusto Editar(DTOCentroCusto dtoCentroCusto)
         {
             var centroCusto = _repositorioCentroCusto.ObterPorId(dtoCentroCusto.Id);
-            if (centroCusto != null)
+            if (centroCusto == null)
             {
-                centroCusto.Nome = dtoCentroCusto.Nome;
-                centroCusto.Cpf = dtoCentroCusto.Cpf;
-                centroCusto.Email = dtoCentroCusto.Email;
-                centroCusto.Celular = dtoCentroCusto.Celular;
-
-                _repositorioCentroCusto.Editar(centroCusto);
+                throw new KeyNotFoundException("Centro de Custo não encontrado.");
             }
+
+            _mapper.Map(dtoCentroCusto, centroCusto);
+            _repositorioCentroCusto.Editar(centroCusto);
 
             return dtoCentroCusto;
         }
 
         public IEnumerable<DTOCentroCusto> Listar()
         {
-            return _repositorioCentroCusto.Listar().Select(p => new DTOCentroCusto
-            {
-                Id = p.Id,
-                Nome = p.Nome,
-                Cpf = p.Cpf,
-                Email = p.Email,
-                Celular = p.Celular
-            }).ToList();
+            var centroCustos = _repositorioCentroCusto.Listar();
+            return _mapper.Map<IEnumerable<DTOCentroCusto>>(centroCustos);
         }
 
         public DTOCentroCusto ObterPorId(int id)
@@ -64,21 +51,20 @@ namespace Infra.Servicos
             var centroCusto = _repositorioCentroCusto.ObterPorId(id);
             if (centroCusto == null)
             {
-                throw new Exception("Centro de Custo não encontrado.");
+                throw new KeyNotFoundException("Centro de Custo não encontrado.");
             }
 
-            return new DTOCentroCusto
-            {
-                Id = centroCusto.Id,
-                Nome = centroCusto.Nome,
-                Cpf = centroCusto.Cpf,
-                Email = centroCusto.Email,
-                Celular = centroCusto.Celular
-            };
+            return _mapper.Map<DTOCentroCusto>(centroCusto);
         }
 
         public void Remover(int id)
         {
+            var centroCusto = _repositorioCentroCusto.ObterPorId(id);
+            if (centroCusto == null)
+            {
+                throw new KeyNotFoundException("Centro de Custo não encontrado.");
+            }
+
             _repositorioCentroCusto.Remover(id);
         }
     }
