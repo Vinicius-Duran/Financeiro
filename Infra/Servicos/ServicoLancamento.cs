@@ -3,13 +3,13 @@ using Dominio.Argumentos;
 using Dominio.Entidades;
 using Dominio.Interfaces;
 using Dominio.Interfaces.Repositorio;
-using System;
+using prmToolkit.NotificationPattern;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Infra.Servicos
 {
-    public class ServicoLancamento : IServicoLancamento
+    public class ServicoLancamento : Notifiable, IServicoLancamento
     {
         private readonly IRepositorioLancamento _repositorioLancamento;
         private readonly IMapper _mapper;
@@ -23,6 +23,7 @@ namespace Infra.Servicos
         public DTOLancamento Adicionar(DTOLancamento dtoLancamento)
         {
             var lancamento = _mapper.Map<Lancamento>(dtoLancamento);
+
             _repositorioLancamento.Adicionar(lancamento);
             return _mapper.Map<DTOLancamento>(lancamento);
         }
@@ -32,7 +33,8 @@ namespace Infra.Servicos
             var lancamento = _repositorioLancamento.ObterPorId(dtoLancamento.Id);
             if (lancamento == null)
             {
-                throw new InvalidOperationException("Lançamento não encontrado.");
+                AddNotification("Lancamento", "Lançamento não encontrado.");
+                return null;
             }
 
             _mapper.Map(dtoLancamento, lancamento);
@@ -52,7 +54,8 @@ namespace Infra.Servicos
             var lancamento = _repositorioLancamento.ObterPorId(id);
             if (lancamento == null)
             {
-                throw new InvalidOperationException("Lançamento não encontrado.");
+                AddNotification("Lancamento", "Lançamento não encontrado.");
+                return null;
             }
 
             return _mapper.Map<DTOLancamento>(lancamento);
@@ -63,7 +66,8 @@ namespace Infra.Servicos
             var lancamento = _repositorioLancamento.ObterPorId(id);
             if (lancamento == null)
             {
-                throw new InvalidOperationException("Lançamento não encontrado.");
+                AddNotification("Lancamento", "Lançamento não encontrado.");
+                return;
             }
 
             _repositorioLancamento.Remover(id);

@@ -1,6 +1,7 @@
 ﻿using Dominio.Argumentos;
 using Dominio.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using prmToolkit.NotificationPattern;
 
 namespace API.Controllers
 {
@@ -16,69 +17,54 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public IActionResult AdicionarReceita([FromBody] DTOReceita dtoReceita)
+        public IActionResult Adicionar(DTOReceita dtoReceita)
         {
-            try
+            var resultado = _servicoReceita.Adicionar(dtoReceita);
+            if (_servicoReceita.IsInvalid())
             {
-                var novaReceita = _servicoReceita.Adicionar(dtoReceita);
-                return CreatedAtAction(nameof(ObterPorId), new { id = novaReceita.Id }, novaReceita);
+                return BadRequest(new { errors = _servicoReceita.Notifications });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            return Ok(resultado);
         }
 
-        [HttpPut("{id}")]
-        public IActionResult EditarReceita(int id, [FromBody] DTOReceita dtoReceita)
+        [HttpPut]
+        public IActionResult Editar(DTOReceita dtoReceita)
         {
-            if (id != dtoReceita.Id)
-                return BadRequest(new { error = "ID mismatch" });
-
-            try
+            var resultado = _servicoReceita.Editar(dtoReceita);
+            if (_servicoReceita.IsInvalid())
             {
-                var receitaEditada = _servicoReceita.Editar(dtoReceita);
-                return Ok(receitaEditada);
+                return BadRequest(new { errors = _servicoReceita.Notifications });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            return Ok(resultado);
         }
 
         [HttpGet]
-        public IActionResult ListarReceita()
+        public IActionResult Listar()
         {
-            var receitas = _servicoReceita.Listar();
-            return Ok(receitas);
+            var resultado = _servicoReceita.Listar();
+            return Ok(resultado);
         }
 
         [HttpGet("{id}")]
         public IActionResult ObterPorId(int id)
         {
-            try
+            var resultado = _servicoReceita.ObterPorId(id);
+            if (_servicoReceita.IsInvalid())
             {
-                var receita = _servicoReceita.ObterPorId(id);
-                return Ok(receita);
+                return BadRequest(new { errors = _servicoReceita.Notifications });
             }
-            catch (Exception ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
+            return Ok(resultado);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult RemoverReceita(int id)
+        public IActionResult Remover(int id)
         {
-            try
+            _servicoReceita.Remover(id);
+            if (_servicoReceita.IsInvalid())
             {
-                _servicoReceita.Remover(id);
-                return NoContent();
+                return BadRequest(new { errors = _servicoReceita.Notifications });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            return Ok();
         }
     }
 }

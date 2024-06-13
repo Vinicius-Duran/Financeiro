@@ -1,8 +1,9 @@
 ﻿using Dominio.Argumentos;
+using prmToolkit.NotificationPattern;
 
 namespace Dominio.Interfaces
 {
-    public interface IServicoContaBancaria
+    public interface IServicoContaBancaria : INotifiable
     {
         DTOContaBancaria Adicionar(DTOContaBancaria dtoContaBancaria);
         DTOContaBancaria Editar(DTOContaBancaria dtoContaBancaria);

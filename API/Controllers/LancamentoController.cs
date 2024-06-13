@@ -1,6 +1,7 @@
 ﻿using Dominio.Argumentos;
 using Dominio.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using prmToolkit.NotificationPattern;
 
 namespace API.Controllers
 {
@@ -16,69 +17,54 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public IActionResult AdicionarLancamento([FromBody] DTOLancamento dtoLancamento)
+        public IActionResult Adicionar(DTOLancamento dtoLancamento)
         {
-            try
+            var resultado = _servicoLancamento.Adicionar(dtoLancamento);
+            if (_servicoLancamento.IsInvalid())
             {
-                var novoLancamento = _servicoLancamento.Adicionar(dtoLancamento);
-                return CreatedAtAction(nameof(ObterPorId), new { id = novoLancamento.Id }, novoLancamento);
+                return BadRequest(new { errors = _servicoLancamento.Notifications });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            return Ok(resultado);
         }
 
-        [HttpPut("{id}")]
-        public IActionResult EditarLancamento(int id, [FromBody] DTOLancamento dtoLancamento)
+        [HttpPut]
+        public IActionResult Editar(DTOLancamento dtoLancamento)
         {
-            if (id != dtoLancamento.Id)
-                return BadRequest(new { error = "ID mismatch" });
-
-            try
+            var resultado = _servicoLancamento.Editar(dtoLancamento);
+            if (_servicoLancamento.IsInvalid())
             {
-                var lancamentoEditado = _servicoLancamento.Editar(dtoLancamento);
-                return Ok(lancamentoEditado);
+                return BadRequest(new { errors = _servicoLancamento.Notifications });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            return Ok(resultado);
         }
 
         [HttpGet]
-        public IActionResult ListarLancamento()
+        public IActionResult Listar()
         {
-            var lancamentos = _servicoLancamento.Listar();
-            return Ok(lancamentos);
+            var resultado = _servicoLancamento.Listar();
+            return Ok(resultado);
         }
 
         [HttpGet("{id}")]
         public IActionResult ObterPorId(int id)
         {
-            try
+            var resultado = _servicoLancamento.ObterPorId(id);
+            if (_servicoLancamento.IsInvalid())
             {
-                var lancamento = _servicoLancamento.ObterPorId(id);
-                return Ok(lancamento);
+                return BadRequest(new { errors = _servicoLancamento.Notifications });
             }
-            catch (Exception ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
+            return Ok(resultado);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult RemoverLancamento(int id)
+        public IActionResult Remover(int id)
         {
-            try
+            _servicoLancamento.Remover(id);
+            if (_servicoLancamento.IsInvalid())
             {
-                _servicoLancamento.Remover(id);
-                return NoContent();
+                return BadRequest(new { errors = _servicoLancamento.Notifications });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            return Ok();
         }
     }
 }

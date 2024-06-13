@@ -1,85 +1,75 @@
 ﻿using Dominio.Argumentos;
 using Dominio.Interfaces;
-using Infra.Utilidade;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace API.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class UsuariosController : ControllerBase
+    [ApiController]
+    public class UsuarioController : ControllerBase
     {
         private readonly IServicoUsuario _servicoUsuario;
 
-        public UsuariosController(IServicoUsuario servicoUsuario)
+        public UsuarioController(IServicoUsuario servicoUsuario)
         {
             _servicoUsuario = servicoUsuario;
         }
 
         [HttpPost]
-        public IActionResult AdicionarUsuario([FromBody] DTOUsuario dtoUsuario)
+        public IActionResult Adicionar([FromBody] DTOUsuario dtoUsuario)
         {
-            try
+            var resultado = _servicoUsuario.Adicionar(dtoUsuario);
+            if (_servicoUsuario.IsInvalid())
             {
-                var novoUsuario = _servicoUsuario.Adicionar(dtoUsuario);
-                return CreatedAtAction(nameof(ObterPorId), new { id = novoUsuario.Id }, novoUsuario);
+                return BadRequest(_servicoUsuario.Notifications);
             }
-            catch (ServicoException ex)
-            {
-                return StatusCode(ex.StatusCode, new { error = ex.Message });
-            }
+
+            return Ok(resultado);
         }
 
-        [HttpPut("{id}")]
-        public IActionResult EditarUsuario(int id, [FromBody] DTOUsuario dtoUsuario)
+        [HttpPut]
+        public IActionResult Editar([FromBody] DTOUsuario dtoUsuario)
         {
-            if (id != dtoUsuario.Id)
-                return BadRequest(new { error = "ID mismatch" });
+            var resultado = _servicoUsuario.Editar(dtoUsuario);
+            if (_servicoUsuario.IsInvalid())
+            {
+                return BadRequest(_servicoUsuario.Notifications);
+            }
 
-            try
-            {
-                var usuarioEditado = _servicoUsuario.Editar(dtoUsuario);
-                return Ok(usuarioEditado);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            return Ok(resultado);
         }
 
         [HttpGet]
-        public IActionResult ListarUsuarios()
+        public IActionResult Listar()
         {
-            var usuarios = _servicoUsuario.Listar();
-            return Ok(usuarios);
+            var resultado = _servicoUsuario.Listar();
+            return Ok(resultado);
         }
 
         [HttpGet("{id}")]
         public IActionResult ObterPorId(int id)
         {
-            try
+            var resultado = _servicoUsuario.ObterPorId(id);
+            if (_servicoUsuario.IsInvalid())
             {
-                var usuario = _servicoUsuario.ObterPorId(id);
-                return Ok(usuario);
+                return NotFound(_servicoUsuario.Notifications);
             }
-            catch (Exception ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
+
+            return Ok(resultado);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult RemoverUsuario(int id)
+        public IActionResult Remover(int id)
         {
-            try
+            _servicoUsuario.Remover(id);
+            if (_servicoUsuario.IsInvalid())
             {
-                _servicoUsuario.Remover(id);
-                return NoContent();
+                return NotFound(_servicoUsuario.Notifications);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+
+            return NoContent();
         }
     }
 }

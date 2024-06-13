@@ -3,11 +3,13 @@ using Dominio.Argumentos;
 using Dominio.Entidades;
 using Dominio.Interfaces;
 using Dominio.Interfaces.Repositorio;
+using prmToolkit.NotificationPattern;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Infra.Servicos
 {
-    public class ServicoReceita : IServicoReceita
+    public class ServicoReceita : Notifiable, IServicoReceita
     {
         private readonly IRepositorioReceita _repositorioReceita;
         private readonly IMapper _mapper;
@@ -21,6 +23,7 @@ namespace Infra.Servicos
         public DTOReceita Adicionar(DTOReceita dtoReceita)
         {
             var receita = _mapper.Map<Receita>(dtoReceita);
+
             _repositorioReceita.Adicionar(receita);
             return _mapper.Map<DTOReceita>(receita);
         }
@@ -30,7 +33,8 @@ namespace Infra.Servicos
             var receita = _repositorioReceita.ObterPorId(dtoReceita.Id);
             if (receita == null)
             {
-                throw new KeyNotFoundException("Receita não encontrada.");
+                AddNotification("Receita", "Receita não encontrada.");
+                return null;
             }
 
             _mapper.Map(dtoReceita, receita);
@@ -50,7 +54,8 @@ namespace Infra.Servicos
             var receita = _repositorioReceita.ObterPorId(id);
             if (receita == null)
             {
-                throw new KeyNotFoundException("Receita não encontrada.");
+                AddNotification("Receita", "Receita não encontrada.");
+                return null;
             }
 
             return _mapper.Map<DTOReceita>(receita);
@@ -61,7 +66,8 @@ namespace Infra.Servicos
             var receita = _repositorioReceita.ObterPorId(id);
             if (receita == null)
             {
-                throw new KeyNotFoundException("Receita não encontrada.");
+                AddNotification("Receita", "Receita não encontrada.");
+                return;
             }
 
             _repositorioReceita.Remover(id);

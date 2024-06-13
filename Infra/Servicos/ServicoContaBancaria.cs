@@ -3,12 +3,13 @@ using Dominio.Argumentos;
 using Dominio.Entidades;
 using Dominio.Interfaces;
 using Dominio.Interfaces.Repositorio;
+using prmToolkit.NotificationPattern;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Infra.Servicos
 {
-    public class ServicoContaBancaria : IServicoContaBancaria
+    public class ServicoContaBancaria : Notifiable, IServicoContaBancaria
     {
         private readonly IRepositorioContaBancaria _repositorioContaBancaria;
         private readonly IMapper _mapper;
@@ -22,6 +23,13 @@ namespace Infra.Servicos
         public DTOContaBancaria Adicionar(DTOContaBancaria dtoContaBancaria)
         {
             var contaBancaria = _mapper.Map<ContaBancaria>(dtoContaBancaria);
+
+            if (_repositorioContaBancaria.Existe(c => c.Conta == contaBancaria.Conta))
+            {
+                AddNotification("ContaBancaria", "Conta bancária já existe.");
+                return null;
+            }
+
             _repositorioContaBancaria.Adicionar(contaBancaria);
             return _mapper.Map<DTOContaBancaria>(contaBancaria);
         }
@@ -31,7 +39,8 @@ namespace Infra.Servicos
             var contaBancaria = _repositorioContaBancaria.ObterPorId(dtoContaBancaria.Id);
             if (contaBancaria == null)
             {
-                throw new KeyNotFoundException("Conta bancária não encontrada.");
+                AddNotification("ContaBancaria", "Conta bancária não encontrada.");
+                return null;
             }
 
             _mapper.Map(dtoContaBancaria, contaBancaria);
@@ -51,7 +60,8 @@ namespace Infra.Servicos
             var contaBancaria = _repositorioContaBancaria.ObterPorId(id);
             if (contaBancaria == null)
             {
-                throw new KeyNotFoundException("Conta bancária não encontrada.");
+                AddNotification("ContaBancaria", "Conta bancária não encontrada.");
+                return null;
             }
 
             return _mapper.Map<DTOContaBancaria>(contaBancaria);
@@ -62,7 +72,8 @@ namespace Infra.Servicos
             var contaBancaria = _repositorioContaBancaria.ObterPorId(id);
             if (contaBancaria == null)
             {
-                throw new KeyNotFoundException("Conta bancária não encontrada.");
+                AddNotification("ContaBancaria", "Conta bancária não encontrada.");
+                return;
             }
 
             _repositorioContaBancaria.Remover(id);

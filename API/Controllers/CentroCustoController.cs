@@ -1,11 +1,13 @@
 ﻿using Dominio.Argumentos;
 using Dominio.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace API.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class CentroCustoController : ControllerBase
     {
         private readonly IServicoCentroCusto _servicoCentroCusto;
@@ -16,69 +18,58 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public IActionResult AdicionarCentroCusto([FromBody] DTOCentroCusto dtoCentroCusto)
+        public IActionResult Adicionar([FromBody] DTOCentroCusto dtoCentroCusto)
         {
-            try
+            var resultado = _servicoCentroCusto.Adicionar(dtoCentroCusto);
+            if (_servicoCentroCusto.IsInvalid())
             {
-                var novoCentroCusto = _servicoCentroCusto.Adicionar(dtoCentroCusto);
-                return CreatedAtAction(nameof(ObterPorId), new { id = novoCentroCusto.Id }, novoCentroCusto);
+                return BadRequest(_servicoCentroCusto.Notifications);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+
+            return Ok(resultado);
         }
 
-        [HttpPut("{id}")]
-        public IActionResult EditarCentroCusto(int id, [FromBody] DTOCentroCusto dtoCentroCusto)
+        [HttpPut]
+        public IActionResult Editar([FromBody] DTOCentroCusto dtoCentroCusto)
         {
-            if (id != dtoCentroCusto.Id)
-                return BadRequest(new { error = "ID mismatch" });
+            var resultado = _servicoCentroCusto.Editar(dtoCentroCusto);
+            if (_servicoCentroCusto.IsInvalid())
+            {
+                return BadRequest(_servicoCentroCusto.Notifications);
+            }
 
-            try
-            {
-                var centroCustoEditado = _servicoCentroCusto.Editar(dtoCentroCusto);
-                return Ok(centroCustoEditado);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            return Ok(resultado);
         }
 
         [HttpGet]
-        public IActionResult ListarCentroCusto()
+        public IActionResult Listar()
         {
-            var centroCustos = _servicoCentroCusto.Listar();
-            return Ok(centroCustos);
+            var resultado = _servicoCentroCusto.Listar();
+            return Ok(resultado);
         }
 
         [HttpGet("{id}")]
         public IActionResult ObterPorId(int id)
         {
-            try
+            var resultado = _servicoCentroCusto.ObterPorId(id);
+            if (_servicoCentroCusto.IsInvalid())
             {
-                var centroCusto = _servicoCentroCusto.ObterPorId(id);
-                return Ok(centroCusto);
+                return NotFound(_servicoCentroCusto.Notifications);
             }
-            catch (Exception ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
+
+            return Ok(resultado);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult RemoverCentroCusto(int id)
+        public IActionResult Remover(int id)
         {
-            try
+            _servicoCentroCusto.Remover(id);
+            if (_servicoCentroCusto.IsInvalid())
             {
-                _servicoCentroCusto.Remover(id);
-                return NoContent();
+                return NotFound(_servicoCentroCusto.Notifications);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+
+            return NoContent();
         }
     }
 }

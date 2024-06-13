@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Dominio.Entidades;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,5 +15,6 @@ namespace Dominio.Interfaces.Repositorio
         IEnumerable<T> Listar();
         T ObterPorId(int id);
         void Remover(int id);
+        bool Existe(Expression<Func<T, bool>> predicate);
     }
 }

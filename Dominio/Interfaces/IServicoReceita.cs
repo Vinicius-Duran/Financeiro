@@ -1,8 +1,9 @@
 ﻿using Dominio.Argumentos;
+using prmToolkit.NotificationPattern;
 
 namespace Dominio.Interfaces
 {
-    public interface IServicoReceita
+    public interface IServicoReceita : INotifiable
     {
         DTOReceita Adicionar(DTOReceita dtoReceita);
         DTOReceita Editar(DTOReceita dtoReceita);

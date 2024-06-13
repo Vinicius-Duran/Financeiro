@@ -1,8 +1,9 @@
 ﻿using Dominio.Argumentos;
+using prmToolkit.NotificationPattern;
 
 namespace Dominio.Interfaces
 {
-    public interface IServicoLancamento
+    public interface IServicoLancamento : INotifiable
     {
         DTOLancamento Adicionar(DTOLancamento dtoLancamento);
         DTOLancamento Editar(DTOLancamento dtoLancamento);

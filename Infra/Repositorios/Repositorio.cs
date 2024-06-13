@@ -1,5 +1,7 @@
-﻿using Dominio.Interfaces.Repositorio;
+﻿using Dominio.Entidades;
+using Dominio.Interfaces.Repositorio;
 using Infra.Persistencias;
+using System.Linq.Expressions;
 
 namespace Infra.Repositorios
 {
@@ -24,6 +26,11 @@ namespace Infra.Repositorios
             _context.Set<T>().Update(entity);
             _context.SaveChanges();
             return entity;
+        }
+
+        public bool Existe(Expression<Func<T, bool>> predicate)
+        {
+            return _context.Set<T>().Any(predicate);
         }
 
         public IEnumerable<T> Listar()

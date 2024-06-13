@@ -1,8 +1,9 @@
 ﻿using Dominio.Argumentos;
+using prmToolkit.NotificationPattern;
 
 namespace Dominio.Interfaces
 {
-    public interface IServicoUsuario
+    public interface IServicoUsuario : INotifiable
     {
         DTOUsuario Adicionar(DTOUsuario dtoUsuario);
         DTOUsuario Editar(DTOUsuario dtoUsuario);

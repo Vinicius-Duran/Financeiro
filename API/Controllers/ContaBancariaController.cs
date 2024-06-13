@@ -1,12 +1,13 @@
 ﻿using Dominio.Argumentos;
 using Dominio.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace API.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class ContaBancariaController : ControllerBase
     {
         private readonly IServicoContaBancaria _servicoContaBancaria;
@@ -17,69 +18,58 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public IActionResult AdicionarContaBancaria([FromBody] DTOContaBancaria dtoContaBancaria)
+        public IActionResult Adicionar([FromBody] DTOContaBancaria dtoContaBancaria)
         {
-            try
+            var resultado = _servicoContaBancaria.Adicionar(dtoContaBancaria);
+            if (_servicoContaBancaria.IsInvalid())
             {
-                var novaContaBancaria = _servicoContaBancaria.Adicionar(dtoContaBancaria);
-                return CreatedAtAction(nameof(ObterPorId), new { id = novaContaBancaria.Id }, novaContaBancaria);
+                return BadRequest(_servicoContaBancaria.Notifications);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+
+            return Ok(resultado);
         }
 
-        [HttpPut("{id}")]
-        public IActionResult EditarContaBancaria(int id, [FromBody] DTOContaBancaria dtoContaBancaria)
+        [HttpPut]
+        public IActionResult Editar([FromBody] DTOContaBancaria dtoContaBancaria)
         {
-            if (id != dtoContaBancaria.Id)
-                return BadRequest(new { error = "ID mismatch" });
+            var resultado = _servicoContaBancaria.Editar(dtoContaBancaria);
+            if (_servicoContaBancaria.IsInvalid())
+            {
+                return BadRequest(_servicoContaBancaria.Notifications);
+            }
 
-            try
-            {
-                var contaBancariaEditada = _servicoContaBancaria.Editar(dtoContaBancaria);
-                return Ok(contaBancariaEditada);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            return Ok(resultado);
         }
 
         [HttpGet]
-        public IActionResult ListarContaBancaria()
+        public IActionResult Listar()
         {
-            var contasBancarias = _servicoContaBancaria.Listar();
-            return Ok(contasBancarias);
+            var resultado = _servicoContaBancaria.Listar();
+            return Ok(resultado);
         }
 
         [HttpGet("{id}")]
         public IActionResult ObterPorId(int id)
         {
-            try
+            var resultado = _servicoContaBancaria.ObterPorId(id);
+            if (_servicoContaBancaria.IsInvalid())
             {
-                var contaBancaria = _servicoContaBancaria.ObterPorId(id);
-                return Ok(contaBancaria);
+                return NotFound(_servicoContaBancaria.Notifications);
             }
-            catch (Exception ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
+
+            return Ok(resultado);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult RemoverContaBancaria(int id)
+        public IActionResult Remover(int id)
         {
-            try
+            _servicoContaBancaria.Remover(id);
+            if (_servicoContaBancaria.IsInvalid())
             {
-                _servicoContaBancaria.Remover(id);
-                return NoContent();
+                return NotFound(_servicoContaBancaria.Notifications);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+
+            return NoContent();
         }
     }
 }
