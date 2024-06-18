@@ -4,9 +4,7 @@ using Dominio.Entidades;
 using Dominio.Interfaces;
 using Dominio.Interfaces.Repositorio;
 using prmToolkit.NotificationPattern;
-using prmToolkit.NotificationPattern.Extensions;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Infra.Servicos
 {
@@ -23,26 +21,24 @@ namespace Infra.Servicos
 
         public DTOUsuario Adicionar(DTOUsuario dtoUsuario)
         {
-            var usuario = _mapper.Map<Usuario>(dtoUsuario);
-
-            
-            if (usuario.Nome.Length < 10)
+           
+            if (dtoUsuario.Nome.Length < 10)
             {
-                AddNotification("Nome", "Nome completo obrigatorio.");
+                AddNotification("Nome", "Nome completo obrigatório.");
             }
-            if (usuario.Cpf.Length != 11 || !usuario.Cpf.All(char.IsDigit))
+            if (dtoUsuario.Cpf.Length != 11 || !dtoUsuario.Cpf.All(char.IsDigit))
             {
                 AddNotification("Cpf", "Cpf deve conter 11 números e apenas números.");
             }
-            if (_repositorioUsuario.Existe(u => u.Cpf == usuario.Cpf))
+            if (_repositorioUsuario.Existe(u => u.Cpf == dtoUsuario.Cpf))
             {
                 AddNotification("Cpf", "Cpf já cadastrado.");
             }
-            if (_repositorioUsuario.Existe(u => u.Email == usuario.Email))
+            if (_repositorioUsuario.Existe(u => u.Email == dtoUsuario.Email))
             {
                 AddNotification("Email", "Email já cadastrado.");
             }
-            if (usuario.DataNascimento > DateTime.Now.AddYears(-18))
+            if (dtoUsuario.DataNascimento > DateTime.Now.AddYears(-18))
             {
                 AddNotification("DataNascimento", "O usuário deve ser maior de 18 anos.");
             }
@@ -52,6 +48,7 @@ namespace Infra.Servicos
                 return null;
             }
 
+            var usuario = new Usuario(dtoUsuario.Nome, dtoUsuario.Email, dtoUsuario.Senha, dtoUsuario.Cpf, dtoUsuario.DataNascimento);
             _repositorioUsuario.Adicionar(usuario);
             return _mapper.Map<DTOUsuario>(usuario);
         }
@@ -61,11 +58,10 @@ namespace Infra.Servicos
             var usuario = _repositorioUsuario.ObterPorId(dtoUsuario.Id);
             if (usuario == null)
             {
-                AddNotification("Usuario", "Usuário não encontrado.");
-                return null;
+                throw new KeyNotFoundException("Usuário não encontrado.");
             }
 
-            _mapper.Map(dtoUsuario, usuario);
+            usuario.AtualizarUsuario(dtoUsuario.Nome, dtoUsuario.Email, dtoUsuario.Senha, dtoUsuario.Cpf, dtoUsuario.DataNascimento);
             _repositorioUsuario.Editar(usuario);
 
             return dtoUsuario;
@@ -82,8 +78,7 @@ namespace Infra.Servicos
             var usuario = _repositorioUsuario.ObterPorId(id);
             if (usuario == null)
             {
-                AddNotification("Usuario", "Usuário não encontrado.");
-                return null;
+                throw new KeyNotFoundException("Usuário não encontrado.");
             }
 
             return _mapper.Map<DTOUsuario>(usuario);
@@ -94,8 +89,7 @@ namespace Infra.Servicos
             var usuario = _repositorioUsuario.ObterPorId(id);
             if (usuario == null)
             {
-                AddNotification("Usuario", "Usuário não encontrado.");
-                return;
+                throw new KeyNotFoundException("Usuário não encontrado.");
             }
 
             _repositorioUsuario.Remover(id);

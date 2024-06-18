@@ -1,19 +1,43 @@
-﻿namespace Dominio.Entidades
+﻿using System;
+
+namespace Dominio.Entidades
 {
     public class Lancamento
     {
-        public int Id { get; set; }
-        public string Descricao { get; set; }
-        public LancamentoTipo Tipo {  get; set; }
-        public decimal Valor {  get; set; }
-        public DateTime DataVencimento { get; set; }
+        public int Id { get; private set; }
+        public string Descricao { get; private set; }
+        public LancamentoTipo Tipo { get; private set; }
+        public decimal Valor { get; private set; }
+        public DateTime DataVencimento { get; private set; }
+        public int ReceitaId { get; private set; }
+        public int CentroCustoId { get; private set; }
+        public int ContaBancariaId { get; private set; }
 
-        public int ReceitaId { get; set; }
-        public int CentroCustoId { get; set; }
-        public int ContaBancariaId { get; set; }
-        public virtual Receita Receita { get; set; }
-        public virtual CentroCusto CentroCusto { get; set; }
-        public virtual ContaBancaria ContaBancaria { get; set;}
+        public virtual Receita Receita { get; private set; }
+        public virtual CentroCusto CentroCusto { get; private set; }
+        public virtual ContaBancaria ContaBancaria { get; private set; }
+
+        public Lancamento(string descricao, LancamentoTipo tipo, decimal valor, DateTime dataVencimento, int receitaId, int centroCustoId, int contaBancariaId)
+        {
+            Descricao = descricao;
+            Tipo = tipo;
+            Valor = valor;
+            DataVencimento = dataVencimento;
+            ReceitaId = receitaId;
+            CentroCustoId = centroCustoId;
+            ContaBancariaId = contaBancariaId;
+        }
+
+        public void Atualizar(string descricao, LancamentoTipo tipo, decimal valor, DateTime dataVencimento, int receitaId, int centroCustoId, int contaBancariaId)
+        {
+            Descricao = descricao;
+            Tipo = tipo;
+            Valor = valor;
+            DataVencimento = dataVencimento;
+            ReceitaId = receitaId;
+            CentroCustoId = centroCustoId;
+            ContaBancariaId = contaBancariaId;
+        }
     }
 
     public enum LancamentoTipo

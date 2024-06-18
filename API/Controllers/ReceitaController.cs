@@ -1,70 +1,92 @@
-﻿using Dominio.Argumentos;
+﻿using AutoMapper;
+using Dominio.Argumentos;
 using Dominio.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using prmToolkit.NotificationPattern;
 
 namespace API.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class ReceitaController : ControllerBase
     {
         private readonly IServicoReceita _servicoReceita;
+        private readonly IMapper _mapper;
 
-        public ReceitaController(IServicoReceita servicoReceita)
+        public ReceitaController(IServicoReceita servicoReceita, IMapper mapper)
         {
             _servicoReceita = servicoReceita;
-        }
-
-        [HttpPost]
-        public IActionResult Adicionar(DTOReceita dtoReceita)
-        {
-            var resultado = _servicoReceita.Adicionar(dtoReceita);
-            if (_servicoReceita.IsInvalid())
-            {
-                return BadRequest(new { errors = _servicoReceita.Notifications });
-            }
-            return Ok(resultado);
-        }
-
-        [HttpPut]
-        public IActionResult Editar(DTOReceita dtoReceita)
-        {
-            var resultado = _servicoReceita.Editar(dtoReceita);
-            if (_servicoReceita.IsInvalid())
-            {
-                return BadRequest(new { errors = _servicoReceita.Notifications });
-            }
-            return Ok(resultado);
+            _mapper = mapper;
         }
 
         [HttpGet]
-        public IActionResult Listar()
+        public ActionResult<IEnumerable<DTOReceita>> Listar()
         {
-            var resultado = _servicoReceita.Listar();
-            return Ok(resultado);
+            var receitas = _servicoReceita.Listar();
+            return Ok(receitas);
         }
 
         [HttpGet("{id}")]
-        public IActionResult ObterPorId(int id)
+        public ActionResult<DTOReceita> ObterPorId(int id)
         {
-            var resultado = _servicoReceita.ObterPorId(id);
-            if (_servicoReceita.IsInvalid())
+            var receita = _servicoReceita.ObterPorId(id);
+            if (receita == null)
             {
-                return BadRequest(new { errors = _servicoReceita.Notifications });
+                return NotFound();
             }
-            return Ok(resultado);
+
+            return Ok(receita);
+        }
+
+        [HttpPost]
+        public ActionResult<DTOReceita> Adicionar([FromBody] DTOReceita dtoReceita)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var receita = _servicoReceita.Adicionar(dtoReceita);
+            if (receita == null)
+            {
+                return BadRequest("Erro ao adicionar a receita.");
+            }
+
+            return CreatedAtAction(nameof(ObterPorId), new { id = receita.Id }, receita);
+        }
+
+        [HttpPut("{id}")]
+        public ActionResult<DTOReceita> Editar(int id, [FromBody] DTOReceita dtoReceita)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (id != dtoReceita.Id)
+            {
+                return BadRequest("ID da URL e ID do corpo não coincidem.");
+            }
+
+            var receita = _servicoReceita.Editar(dtoReceita);
+            if (receita == null)
+            {
+                return NotFound("Receita não encontrada.");
+            }
+
+            return Ok(receita);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Remover(int id)
+        public ActionResult Remover(int id)
         {
-            _servicoReceita.Remover(id);
-            if (_servicoReceita.IsInvalid())
+            var receita = _servicoReceita.ObterPorId(id);
+            if (receita == null)
             {
-                return BadRequest(new { errors = _servicoReceita.Notifications });
+                return NotFound("Receita não encontrada.");
             }
-            return Ok();
+
+            _servicoReceita.Remover(id);
+            return NoContent();
         }
     }
 }

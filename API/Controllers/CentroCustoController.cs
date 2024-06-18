@@ -1,8 +1,7 @@
-﻿using Dominio.Argumentos;
+﻿using AutoMapper;
+using Dominio.Argumentos;
 using Dominio.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace API.Controllers
 {
@@ -11,64 +10,82 @@ namespace API.Controllers
     public class CentroCustoController : ControllerBase
     {
         private readonly IServicoCentroCusto _servicoCentroCusto;
+        private readonly IMapper _mapper;
 
-        public CentroCustoController(IServicoCentroCusto servicoCentroCusto)
+        public CentroCustoController(IServicoCentroCusto servicoCentroCusto, IMapper mapper)
         {
             _servicoCentroCusto = servicoCentroCusto;
-        }
-
-        [HttpPost]
-        public IActionResult Adicionar([FromBody] DTOCentroCusto dtoCentroCusto)
-        {
-            var resultado = _servicoCentroCusto.Adicionar(dtoCentroCusto);
-            if (_servicoCentroCusto.IsInvalid())
-            {
-                return BadRequest(_servicoCentroCusto.Notifications);
-            }
-
-            return Ok(resultado);
-        }
-
-        [HttpPut]
-        public IActionResult Editar([FromBody] DTOCentroCusto dtoCentroCusto)
-        {
-            var resultado = _servicoCentroCusto.Editar(dtoCentroCusto);
-            if (_servicoCentroCusto.IsInvalid())
-            {
-                return BadRequest(_servicoCentroCusto.Notifications);
-            }
-
-            return Ok(resultado);
+            _mapper = mapper;
         }
 
         [HttpGet]
-        public IActionResult Listar()
+        public ActionResult<IEnumerable<DTOCentroCusto>> Listar()
         {
-            var resultado = _servicoCentroCusto.Listar();
-            return Ok(resultado);
+            var centroCustos = _servicoCentroCusto.Listar();
+            return Ok(centroCustos);
         }
 
         [HttpGet("{id}")]
-        public IActionResult ObterPorId(int id)
+        public ActionResult<DTOCentroCusto> ObterPorId(int id)
         {
-            var resultado = _servicoCentroCusto.ObterPorId(id);
-            if (_servicoCentroCusto.IsInvalid())
+            var centroCusto = _servicoCentroCusto.ObterPorId(id);
+            if (centroCusto == null)
             {
-                return NotFound(_servicoCentroCusto.Notifications);
+                return NotFound();
             }
 
-            return Ok(resultado);
+            return Ok(centroCusto);
+        }
+
+        [HttpPost]
+        public ActionResult<DTOCentroCusto> Adicionar([FromBody] DTOCentroCusto dtoCentroCusto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var centroCusto = _servicoCentroCusto.Adicionar(dtoCentroCusto);
+            if (centroCusto == null)
+            {
+                return BadRequest("Erro ao adicionar o centro de custo.");
+            }
+
+            return CreatedAtAction(nameof(ObterPorId), new { id = centroCusto.Id }, centroCusto);
+        }
+
+        [HttpPut("{id}")]
+        public ActionResult<DTOCentroCusto> Editar(int id, [FromBody] DTOCentroCusto dtoCentroCusto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (id != dtoCentroCusto.Id)
+            {
+                return BadRequest("ID da URL e ID do corpo não coincidem.");
+            }
+
+            var centroCusto = _servicoCentroCusto.Editar(dtoCentroCusto);
+            if (centroCusto == null)
+            {
+                return NotFound("Centro de custo não encontrado.");
+            }
+
+            return Ok(centroCusto);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Remover(int id)
+        public ActionResult Remover(int id)
         {
-            _servicoCentroCusto.Remover(id);
-            if (_servicoCentroCusto.IsInvalid())
+            var centroCusto = _servicoCentroCusto.ObterPorId(id);
+            if (centroCusto == null)
             {
-                return NotFound(_servicoCentroCusto.Notifications);
+                return NotFound("Centro de custo não encontrado.");
             }
 
+            _servicoCentroCusto.Remover(id);
             return NoContent();
         }
     }

@@ -5,7 +5,6 @@ using Dominio.Interfaces;
 using Dominio.Interfaces.Repositorio;
 using prmToolkit.NotificationPattern;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Infra.Servicos
 {
@@ -22,8 +21,14 @@ namespace Infra.Servicos
 
         public DTOReceita Adicionar(DTOReceita dtoReceita)
         {
-            var receita = _mapper.Map<Receita>(dtoReceita);
+            
 
+            if (IsInvalid())
+            {
+                return null;
+            }
+
+            var receita = new Receita(dtoReceita.Nome, dtoReceita.Cpf, dtoReceita.Email, dtoReceita.Celular);
             _repositorioReceita.Adicionar(receita);
             return _mapper.Map<DTOReceita>(receita);
         }
@@ -33,11 +38,10 @@ namespace Infra.Servicos
             var receita = _repositorioReceita.ObterPorId(dtoReceita.Id);
             if (receita == null)
             {
-                AddNotification("Receita", "Receita não encontrada.");
-                return null;
+                throw new KeyNotFoundException("Receita não encontrada.");
             }
 
-            _mapper.Map(dtoReceita, receita);
+            receita.AtualizarReceita(dtoReceita.Nome, dtoReceita.Cpf, dtoReceita.Email, dtoReceita.Celular);
             _repositorioReceita.Editar(receita);
 
             return dtoReceita;
@@ -54,8 +58,7 @@ namespace Infra.Servicos
             var receita = _repositorioReceita.ObterPorId(id);
             if (receita == null)
             {
-                AddNotification("Receita", "Receita não encontrada.");
-                return null;
+                throw new KeyNotFoundException("Receita não encontrada.");
             }
 
             return _mapper.Map<DTOReceita>(receita);
@@ -66,8 +69,7 @@ namespace Infra.Servicos
             var receita = _repositorioReceita.ObterPorId(id);
             if (receita == null)
             {
-                AddNotification("Receita", "Receita não encontrada.");
-                return;
+                throw new KeyNotFoundException("Receita não encontrada.");
             }
 
             _repositorioReceita.Remover(id);

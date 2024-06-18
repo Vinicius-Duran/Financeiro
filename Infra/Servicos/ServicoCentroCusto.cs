@@ -22,14 +22,7 @@ namespace Infra.Servicos
 
         public DTOCentroCusto Adicionar(DTOCentroCusto dtoCentroCusto)
         {
-            var centroCusto = _mapper.Map<CentroCusto>(dtoCentroCusto);
-
-            if (_repositorioCentroCusto.Existe(c => c.Nome == centroCusto.Nome))
-            {
-                AddNotification("CentroCusto", "Centro de Custo já existe.");
-                return null;
-            }
-
+            var centroCusto = new CentroCusto(dtoCentroCusto.Nome, dtoCentroCusto.Cpf, dtoCentroCusto.Email, dtoCentroCusto.Celular);
             _repositorioCentroCusto.Adicionar(centroCusto);
             return _mapper.Map<DTOCentroCusto>(centroCusto);
         }
@@ -39,11 +32,10 @@ namespace Infra.Servicos
             var centroCusto = _repositorioCentroCusto.ObterPorId(dtoCentroCusto.Id);
             if (centroCusto == null)
             {
-                AddNotification("CentroCusto", "Centro de Custo não encontrado.");
-                return null;
+                throw new KeyNotFoundException("Centro de Custo não encontrado.");
             }
 
-            _mapper.Map(dtoCentroCusto, centroCusto);
+            centroCusto.Atualizar(dtoCentroCusto.Nome, dtoCentroCusto.Cpf, dtoCentroCusto.Email, dtoCentroCusto.Celular);
             _repositorioCentroCusto.Editar(centroCusto);
 
             return dtoCentroCusto;
@@ -60,8 +52,7 @@ namespace Infra.Servicos
             var centroCusto = _repositorioCentroCusto.ObterPorId(id);
             if (centroCusto == null)
             {
-                AddNotification("CentroCusto", "Centro de Custo não encontrado.");
-                return null;
+                throw new KeyNotFoundException("Centro de Custo não encontrado.");
             }
 
             return _mapper.Map<DTOCentroCusto>(centroCusto);
@@ -72,8 +63,7 @@ namespace Infra.Servicos
             var centroCusto = _repositorioCentroCusto.ObterPorId(id);
             if (centroCusto == null)
             {
-                AddNotification("CentroCusto", "Centro de Custo não encontrado.");
-                return;
+                throw new KeyNotFoundException("Centro de Custo não encontrado.");
             }
 
             _repositorioCentroCusto.Remover(id);

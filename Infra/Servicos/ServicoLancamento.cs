@@ -5,7 +5,6 @@ using Dominio.Interfaces;
 using Dominio.Interfaces.Repositorio;
 using prmToolkit.NotificationPattern;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Infra.Servicos
 {
@@ -22,7 +21,14 @@ namespace Infra.Servicos
 
         public DTOLancamento Adicionar(DTOLancamento dtoLancamento)
         {
-            var lancamento = _mapper.Map<Lancamento>(dtoLancamento);
+            var lancamento = new Lancamento(
+                dtoLancamento.Descricao,
+                (Dominio.Entidades.LancamentoTipo)dtoLancamento.Tipo,
+                dtoLancamento.Valor,
+                dtoLancamento.DataVencimento,
+                dtoLancamento.ReceitaId,
+                dtoLancamento.CentroCustoId,
+                dtoLancamento.ContaBancariaId);
 
             _repositorioLancamento.Adicionar(lancamento);
             return _mapper.Map<DTOLancamento>(lancamento);
@@ -37,10 +43,18 @@ namespace Infra.Servicos
                 return null;
             }
 
-            _mapper.Map(dtoLancamento, lancamento);
+            lancamento.Atualizar(
+                dtoLancamento.Descricao,
+                (Dominio.Entidades.LancamentoTipo)dtoLancamento.Tipo,
+                dtoLancamento.Valor,
+                dtoLancamento.DataVencimento,
+                dtoLancamento.ReceitaId,
+                dtoLancamento.CentroCustoId,
+                dtoLancamento.ContaBancariaId);
+
             _repositorioLancamento.Editar(lancamento);
 
-            return dtoLancamento;
+            return _mapper.Map<DTOLancamento>(lancamento);
         }
 
         public IEnumerable<DTOLancamento> Listar()
